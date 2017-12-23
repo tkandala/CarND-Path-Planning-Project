@@ -70,7 +70,9 @@ The attached video shows the car successfully managing lanes changes when requir
 
 The Path Planning algorithm presented here does a pretty good job of planning a path that is Jerk free, collision free and drives safely for the conditions present.
 
-What the algorithm doesn't implement is the Machine learning piece, which basically uses Naive Bayes to estimate position of cars based on their speeds, position in the future and make decisions based on what is going to happen in the future. 
+What the algorithm doesn't implement is the Machine learning piece, which basically uses Naive Bayes to estimate position of cars based on their speeds, position in the future and make decisions based on what is going to happen in the future. As we can see in the video, at one point, the car gets stuck in the rightmost lane and it is not able to get out of that lane because of another car in the left lane. If planned properly, the car could slow down enough to allow the car in the left lane to pass and slowly move to the leftmost lane and overtake the cars.
+
+Another aspect we can notice here is that our car whne approaching a slower moving vehicle, it slows down significantly (when it is not able to switch lane), slower than the car in front of it. It then accelerates again to realize that it has to reduce again. This keeps repeating until a lane change is safe to be executed. In situations like these, we can implement a follow car feature where our car just blindly follows the car in the same speed. And when it is safe to change lanes, make the lane change.
 
 
 
