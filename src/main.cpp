@@ -206,8 +206,12 @@ int main() {
     // Declare what lane to start with
     // We will execute "Keep Lane" strategy when driving
   int lane = 1;
+    // Declare what the safe distance is before you decide to slow down when approaching a car in front of you
+  double ref_dist = 30;
+    // Declare what the amount of change in velocity needs to be for a non-jerk acceleration or deceleration
+  double ref_accn = 0.224;
 
-  h.onMessage([&ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy, &lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&ref_vel, &ref_dist, &ref_accn, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy, &lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -251,6 +255,7 @@ int main() {
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
 
+            // TODO: Start
             // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 
 
@@ -290,16 +295,16 @@ int main() {
                     // check the position of the car in front of us in the future - 0.02s later
                     check_car_s +=((double)prev_size*0.02*check_speed);
 
-                    // check if the car is front of the car and within the next 30m
-                    if ((check_car_s > car_s) && ((check_car_s - car_s)<30)){
-                        //ref_vel = 29.5;
+                    // check if the car is front of the car and within the safe distance (ref_dist)
+                    if ((check_car_s > car_s) && ((check_car_s - car_s)<ref_dist)){
                         too_close = true;
                     }
                 }
                 // record cars which are beside you in other lanes
                 double check_car_s = sensor_fusion[i][5];
-                if (std::abs(check_car_s - car_s) < 30){
-                    // what lane?
+                // Check cars which are within 30m distance in front and behind you
+                if (std::abs(check_car_s - car_s) < ref_dist){
+                    // what lane? Only consider cars in lanes beside you
                     if (d < (2+4*(lane-1)+2) && d > (2+ 4*(lane-1)-2)){
                         too_close_left = true;
                     } else if (d < 2+4*(lane+1)+2 && d > (2+ 4*(lane+1) -2)){
@@ -312,10 +317,12 @@ int main() {
             // lane change
             if (too_close){
                 if (lane == 1){
-                    // move left if no cars to left
+                    // move left if no cars to left (preferable lane)
                     if (!too_close_left){
                         lane--;
-                    } else {
+                    }
+                    // Or move to right if it is safe
+                    else if (!too_close_right) {
                         lane++;
                     }
                 } else if (lane == 0 && !too_close_right){
@@ -326,13 +333,20 @@ int main() {
             }
 
             if (too_close){
-                ref_vel -= 0.224;
+                // Slowly decrease the velocity so there is no acceleration jerk
+                ref_vel -= ref_accn;
             }
                 // reference velocity should be 49.5MPH (just below 50MPH)
                 // divide by 2.24 to get in m/sec
             else if (ref_vel < 49.5){
-                ref_vel += 0.224;
+                // Slowly increase the velocity so there is no acceleration jerk
+                ref_vel += ref_accn;
             }
+
+
+            // -- Start --
+            // Code snippet to pick points from previous path so there is a smooth transition to the next path
+            //
 
             vector<double> ptsx;
             vector<double> ptsy;
@@ -363,6 +377,11 @@ int main() {
                 ptsy.push_back(ref_y);
             }
 
+            // -- End --
+
+            // Add 3 more points to the path planning that will act as anchor points in Spline path generation
+            // 3 points are 30m, 60m and 90m from the current position
+
             vector<double> next_wp0 = getXY(car_s + 30, (2+4*lane),map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp1 = getXY(car_s + 60, (2+4*lane),map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp2 = getXY(car_s + 90, (2+4*lane),map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -375,6 +394,7 @@ int main() {
             ptsy.push_back(next_wp1[1]);
             ptsy.push_back(next_wp2[1]);
 
+            // Rotate the car axis to zero angle so we are always facing forward
             for (int i = 0; i < ptsx.size(); i++){
                 double shift_x = ptsx[i] - ref_x;
                 double shift_y = ptsy[i] - ref_y;
@@ -383,14 +403,18 @@ int main() {
                 ptsy[i] = (shift_x * sin(0-ref_yaw) + shift_y * cos(0-ref_yaw));
             }
 
+            // Introduce Spline
             tk::spline s;
-
+            // Fit the spline to the defined anchor points
             s.set_points(ptsx,ptsy);
 
             for (int i =0; i < previous_path_x.size(); i++){
                 next_x_vals.push_back(previous_path_x[i]);
                 next_y_vals.push_back(previous_path_y[i]);
             }
+
+            // Calculate the list of points from the current position to the target distance
+            // To avoid jerk, divide the spline into proper portions (50 points) that take reference velocity into consideration
 
             double target_x = 30.0;
             double target_y = s(target_x);
