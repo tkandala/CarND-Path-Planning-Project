@@ -4,7 +4,7 @@
 
 ### Planning Process and Logic
 
-#### Get the car moving inside a lane. Eliminate the Jerk warnings by slowly starting the car from 0 velocity. Take previous path points and combine to current path plan (for next 30m) to create a continuous path. Implement Spline to smooth the transition from previous path to current path keeping in mind the previous velocity so there are no jerks
+#### -> Get the car moving inside a lane. Eliminate the Jerk warnings by slowly starting the car from 0 velocity. Take previous path points and combine to current path plan (for next 30m) to create a continuous path. Implement Spline to smooth the transition from previous path to current path keeping in mind the previous velocity so there are no jerks
 
 For getting the car to move inside the track, there are a series of steps that were done. Code block from line 347 all the way to 446 provide the process of calculating the list of points that define the path.
 
@@ -24,7 +24,7 @@ Lines 411 to 414 add the previous path points, the car couldn't traverse in time
 
 Lines 351 to 414 make sure that the car takes into consideration the previous path's points so we maintain a smooth transition to the next calculated path. Also, Spline function makes sure we are following a smooth curve.
 
-#### Once the car moves without jerk, use Sensor fusion to look for cars in front of you and slow down when approaching a car. Also use Sensor fusion to check for cars beside you or within a distance from you so you don't crash when changing lanes
+#### -> Once the car moves without jerk, use Sensor fusion to look for cars in front of you and slow down when approaching a car. Also use Sensor fusion to check for cars beside you or within a distance from you so you don't crash when changing lanes
 
 Lines 281 to 315 use the sensor fusion data to get the list of cars and their position, velocity, etc to enable us to determine a list of cars around us. 
 
@@ -32,7 +32,7 @@ Lines 288 to 302 check for cars in the current lane we are travelling in. If we 
 
 Lines 304 to 313 check for cars in the lanes beside us. Using similar logic as the car in the same lane, the code snippet calculates cars which are 30m ahead or behind us. Boolean variables `too_close_left` and `too_close_right` are set to true if any cars satisfy the above conditions. 
 
-#### Write logic to change lanes - plan path so you are first avoiding the car in front of you and at the same time avoid crashing into other cars in the lanes beside which you are planning to move into.
+#### -> Write logic to change lanes - plan path so you are first avoiding the car in front of you and at the same time avoid crashing into other cars in the lanes beside which you are planning to move into.
 
 Lines 317 to 333 provide the logic to basically keep the car in it's lane. If a car is moving too slowly in front of us, our car decides to change lanes based on the boolean variables we calculated above for cars in the other lanes. The car doesn't prefer a lane that it wants to travel but rather maintains the lane it is in, if possible, if not changes lanes.
 
@@ -40,6 +40,37 @@ Lines 335 to 344 provides the logic to control the speed of the car. The velocit
 
 ## Project Rubrics
 
+### The car is able to drive at least 4.32 miles without incident..
+
+The YouTube video below shows the car driving around the track without any incident.
+
+[![Video of Car inside simulator successfully going through the highway](http://img.youtube.com/vi/k6hFIXKQwBI/0.jpg)](http://www.youtube.com/watch?v=k6hFIXKQwBI "SDCND Path Planning video")
+
+### The car drives according to the speed limit.
+
+The code block (lines 335 to 344) adds logic to control the speed of the car and maintain it just under 50MPH to around 49.5MPH when there is no car in front of it. In case of slowdown, the car speed goes down until there is enough space for the car to speed up.
+
+### Max Acceleration and Jerk are not Exceeded.
+
+The spline functionality mentioned above along with previous path points and a reference velocity of 49.5MPH, the car's acceleration is maintained. The video also shows no warnings of Jerk throughout.
+
+### Car does not have collisions.
+
+The car's path planning and lane change logic ensures that no collisions occur. Also, speed is reduced when approaching a car and when no lane changes are permissible.
+
+### The car stays in its lane, except for the time between changing lanes.
+
+As mentioned earlier, the speed of the car is reduced when no lane changes are permissible and there is a car in front of it going slower.
+
+### The car is able to change lanes
+
+The attached video shows the car successfully managing lanes changes when required.
+
+## Reflection
+
+The Path Planning algorithm presented here does a pretty good job of planning a path that is Jerk free, collision free and drives safely for the conditions present.
+
+What the algorithm doesn't implement is the Machine learning piece, which basically uses Naive Bayes to estimate position of cars based on their speeds, position in the future and make decisions based on what is going to happen in the future. 
 
 
 
