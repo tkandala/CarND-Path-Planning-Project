@@ -44,7 +44,7 @@ Lines 335 to 344 provides the logic to control the speed of the car. The velocit
 
 The YouTube video below shows the car driving around the track without any incident.
 
-[![Video of Car inside simulator successfully going through the highway](http://img.youtube.com/vi/k6hFIXKQwBI/0.jpg)](http://www.youtube.com/watch?v=k6hFIXKQwBI "SDCND Path Planning video")
+[![Video of Car inside simulator successfully going through the highway](http://img.youtube.com/vi/hRj7UyIEueA/0.jpg)](http://www.youtube.com/watch?v=hRj7UyIEueA "SDCND Path Planning video")
 
 ### The car drives according to the speed limit.
 
